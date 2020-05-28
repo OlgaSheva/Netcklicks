@@ -6,6 +6,7 @@ const leftMenu = document.querySelector('.left-menu'),
       hamburger = document.querySelector('.hamburger'),
       tvShowsList = document.querySelector('.tv-shows__list'),
       modal = document.querySelector('.modal'),
+      posterWrapper = document.querySelector('.poster__wrapper'),
       tvShows = document.querySelector('.tv-shows'),
       tvCardImg = document.querySelector('.tv-card__img'),
       modalTitle = document.querySelector('.modal__title'),
@@ -29,14 +30,8 @@ const DBService = class {
         }       
     }
 
-    getTestData = () => {
-        return this.getData('test.json');
-    }
-
-    getTestCard = () => {
-        return this.getData('card.json');
-    }
-
+    getTestData = () => this.getData('test.json');
+    getTestCard = () => this.getData('card.json');
     getSearchResult = query => this.getData(`${SERVER}/search/tv?api_key=${API_KEY}&language=ru-RU&query=${query}`);
     getTvShow = id => this.getData(`${SERVER}/tv/${id}?api_key=${API_KEY}&language=ru-RU`);
 }
@@ -46,7 +41,7 @@ const renderCard = res => {
 
     if (res.total_results == 0) {
         loading.remove();
-        tvShows.innerHTML += (`<h4>По вашему запросу сериалов не найдено</h4>`);
+        tvShowsList.innerHTML += (`<h4>По вашему запросу сериалов не найдено</h4>`);
         return;
     }
 
@@ -123,9 +118,8 @@ leftMenu.addEventListener('click', event => {
 
 const changeImage = event => {
     const img = event.target.closest('.tv-card__img');
-    if (event.target.matches('.tv-card__img') &&
-        img.dataset.backdrop) {
-            [img.src, img.dataset.backdrop] = [img.dataset.backdrop, img.src];
+    if (event.target.matches('.tv-card__img') && img.dataset.backdrop) {
+        [img.src, img.dataset.backdrop] = [img.dataset.backdrop, img.src];
     }
 };
 
@@ -139,7 +133,17 @@ tvShowsList.addEventListener('click', event => {
     if (card) {     
         new DBService().getTvShow(card.id)
             .then(data => {
-                tvCardImg.src = IMG_URL + data.poster_path;
+                posterWrapper.innerHTML = data.poster_path ? 
+                    `<div class="poster__wrapper">
+                        <div class="poster">
+                            <div class="image__content">                            
+                                <img class="tv-card__img"
+                                src="${IMG_URL + data.poster_path}"
+                                alt="${data.name}">
+                            </div>        
+                        </div>
+                    </div>
+                    ` : '';
                 modalTitle.textContent = data.name;
                 genresList.innerHTML = data.genres.reduce((acc, item) => `${acc}<li>${item.name}</li>`, '');
                 rating.textContent = data.vote_average;
