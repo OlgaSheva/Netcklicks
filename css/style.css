@@ -1210,3 +1210,17 @@ div:after {
 .pagination li a {
     padding: 0 5px;
 }
+
+.pages {
+    color: #000000;
+    text-decoration: none;
+}
+
+.pages:visited {
+    color: #800080;
+}
+ 
+.pages:hover {
+    color: #800000;  
+    text-decoration: underline;
+}

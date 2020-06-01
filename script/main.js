@@ -31,7 +31,6 @@ const openMenu = () => {
 };
 
 const closeMenu = event => {
-    event.preventDefault();
     if (!event.target.closest('.left-menu')) {
         leftMenu.classList.remove('openMenu');
         hamburger.classList.remove('open');
@@ -74,14 +73,6 @@ const changePage = event => {
     }
 };
 
-const closeModal = event => {
-    if (event.target.closest('.cross') ||
-        event.target.classList.contains('modal')) {
-        document.body.style.overflow = '';
-        modal.classList.add('hide');
-    }
-};
-
 const openDropdown = dropdown => {
     dropdown.classList.toggle('active');
     leftMenu.classList.add('openMenu');
@@ -104,12 +95,36 @@ const leftMenuHandler = event => {
     }
 
     if (menuLink) {
+        window.scrollTo(0, 0);
         downloadTvCategory(menuLink.dataset.category, target);
     }
 
     if (search) {
         tvShowsList.textContent = '';
         tvShowsHead.textContent = '';
+    }
+};
+
+const renderModal = data => {
+    if (data.poster_path) {
+        tvCardImg.src = IMG_URL + data.poster_path;
+        tvCardImg.alt = data.name;
+        posterWrapper.style.display = '';
+        modalContent.style.paddingLeft = '';
+    } else {
+        posterWrapper.style.display = 'none';
+        modalContent.style.paddingLeft = '40px';
+    }
+
+    modalTitle.textContent = data.name;
+    genresList.innerHTML = data.genres.reduce((acc, item) => `${acc}<li>${item.name}</li>`, '');
+    rating.textContent = data.vote_average;
+    description.textContent = data.overview;
+    if(data.homepage) {
+        modalLink.href = data.homepage;
+        modalLink.style.display = '';
+    } else {
+        modalLink.style.display = 'none';
     }
 };
 
@@ -120,30 +135,26 @@ const showModal = event => {
         preloader.style.display = 'block';
         
         dbService.getTvShow(card.id)
-            .then(data => {
-                if (data.poster_path) {
-                    tvCardImg.src = IMG_URL + data.poster_path;
-                    tvCardImg.alt = data.name;
-                    posterWrapper.style.display = '';
-                    modalContent.style.paddingLeft = '';
-                } else {
-                    posterWrapper.style.display = 'none';
-                    modalContent.style.paddingLeft = '40px';
-                }
-
-                modalTitle.textContent = data.name;
-                genresList.innerHTML = data.genres.reduce((acc, item) => `${acc}<li>${item.name}</li>`, '');
-                rating.textContent = data.vote_average;
-                description.textContent = data.overview;
-                modalLink.href = data.homepage;
-            })
+            .then(data => renderModal(data))
             .then(() => {
                 document.body.style.overflow = 'hidden';
                 modal.classList.remove('hide');
             })
+            .catch(err => {
+                alert("По данному сериалу нет никакой информации");
+            })
             .finally(() => {
                 preloader.style.display = '';
             });
+    }
+};
+
+const closeModal = event => {
+    if (event.target.closest('.cross') ||
+        event.target.classList.contains('modal')) {
+            event.preventDefault();
+            document.body.style.overflow = '';
+            modal.classList.add('hide');
     }
 };
 
@@ -167,8 +178,9 @@ const renderCard = (response, target) => {
 
     //pagination    
     pagination.textContent = '';
-    if (!target && response.total_pages > 1) {
-        for (let i = 1; i <= response.total_pages; i++) {
+    let totalPages = response.total_pages <= 10 ? response.total_pages : 10; // page limit
+    if (!target && totalPages > 1) {
+        for (let i = 1; i <= totalPages; i++) {
             pagination.innerHTML += `<li><a href="#" class="pages">${i}</a></li>`;
         }
     }
