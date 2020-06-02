@@ -102,6 +102,7 @@ const leftMenuHandler = event => {
     if (search) {
         tvShowsList.textContent = '';
         tvShowsHead.textContent = '';
+        pagination.textContent = '';
     }
 };
 
